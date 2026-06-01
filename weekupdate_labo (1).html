@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weekupdate — Labo Scientific</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: #f4f4f2; min-height: 100vh; padding: 24px 16px; }
+
+  .page { max-width: 900px; margin: 0 auto; }
+
+  .header {
+    background: #F53D1C;
+    color: white;
+    padding: 18px 24px;
+    border-radius: 10px 10px 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .header h1 { font-size: 18px; font-weight: 700; letter-spacing: 0.3px; }
+  .header-sub { font-size: 12px; opacity: 0.85; margin-top: 3px; }
+  .logo-mark { font-size: 11px; font-weight: 700; letter-spacing: 2px; opacity: 0.75; }
+  .week-badge {
+    background: rgba(255,255,255,0.22);
+    border-radius: 6px;
+    padding: 5px 12px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .toolbar {
+    background: #fff;
+    border-left: 1px solid #ddd;
+    border-right: 1px solid #ddd;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .toolbar label { font-size: 12px; color: #666; }
+  .toolbar input[type="date"] {
+    padding: 5px 8px;
+    font-size: 13px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-family: Arial, sans-serif;
+  }
+  .toolbar input[type="text"] {
+    padding: 5px 10px;
+    font-size: 13px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-family: Arial, sans-serif;
+    width: 200px;
+  }
+  .toolbar input:focus { outline: none; border-color: #F53D1C; }
+
+  .btn {
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: Arial, sans-serif;
+    border: none;
+  }
+  .btn-primary { background: #F53D1C; color: white; }
+  .btn-primary:hover { background: #d4320f; }
+  .btn-secondary { background: #fff; color: #333; border: 1px solid #ccc; }
+  .btn-secondary:hover { background: #f4f4f2; }
+  .btn-export { background: #333; color: white; }
+  .btn-export:hover { background: #111; }
+  .btn-print { background: #555; color: white; }
+  .btn-print:hover { background: #333; }
+
+  .columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    background: #fff;
+    border-left: 1px solid #ddd;
+    border-right: 1px solid #ddd;
+    gap: 0;
+  }
+  .col { border-right: 1px solid #e5e5e5; display: flex; flex-direction: column; }
+  .col:last-child { border-right: none; }
+
+  .col-header {
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid #e5e5e5;
+  }
+  .dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .col-todo .col-header { background: #f5f5f3; color: #666; }
+  .col-todo .dot { background: #999; }
+  .col-doing .col-header { background: #fff8ec; color: #9a5500; }
+  .col-doing .dot { background: #F0A030; }
+  .col-done .col-header { background: #edf7e4; color: #3a6a12; }
+  .col-done .dot { background: #5a9e1e; }
+
+  .col-count {
+    margin-left: auto;
+    font-size: 11px;
+    background: rgba(0,0,0,0.08);
+    border-radius: 10px;
+    padding: 1px 7px;
+    font-weight: 600;
+  }
+
+  .task-list {
+    flex: 1;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 180px;
+    background: #fafaf9;
+  }
+
+  .task-card {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+  .task-title { font-weight: 600; color: #222; line-height: 1.4; }
+  .task-note {
+    font-size: 12px;
+    color: #888;
+    margin-top: 4px;
+    line-height: 1.45;
+    white-space: pre-wrap;
+  }
+  .task-footer { margin-top: 8px; display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
+  .btn-sm {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    border: 1px solid #ddd;
+    background: #fff;
+    color: #555;
+    font-family: Arial, sans-serif;
+  }
+  .btn-sm:hover { background: #f0f0ee; }
+  .btn-del-sm {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    border: 1px solid #ddd;
+    background: #fff;
+    color: #999;
+    margin-left: auto;
+    font-family: Arial, sans-serif;
+  }
+  .btn-del-sm:hover { background: #fdecea; color: #c0392b; border-color: #e0b0b0; }
+
+  .add-area {
+    padding: 10px;
+    border-top: 1px solid #e5e5e5;
+    background: #fff;
+  }
+  .add-row { display: flex; gap: 6px; }
+  .add-row input[type="text"] {
+    flex: 1;
+    padding: 6px 9px;
+    font-size: 12px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-family: Arial, sans-serif;
+    background: #fafaf9;
+  }
+  .add-row input[type="text"]:focus { outline: none; border-color: #F53D1C; }
+  .add-row button {
+    background: #F53D1C;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 6px 12px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: Arial, sans-serif;
+  }
+  .add-row button:hover { background: #d4320f; }
+
+  .add-note-row { margin-top: 6px; }
+  .add-note-row input[type="text"] {
+    width: 100%;
+    padding: 5px 9px;
+    font-size: 11px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-family: Arial, sans-serif;
+    background: #fafaf9;
+    color: #666;
+  }
+  .add-note-row input[type="text"]:focus { outline: none; border-color: #F53D1C; }
+
+  .footer {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-top: none;
+    border-radius: 0 0 10px 10px;
+    padding: 12px 20px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+  .footer-left { font-size: 12px; color: #888; }
+  .footer-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  /* Export modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: #fff;
+    border-radius: 10px;
+    padding: 24px;
+    width: 90%;
+    max-width: 560px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+  }
+  .modal h2 { font-size: 16px; margin-bottom: 12px; color: #F53D1C; }
+  .modal textarea {
+    width: 100%;
+    height: 280px;
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    line-height: 1.6;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    resize: vertical;
+  }
+  .modal-footer { margin-top: 14px; display: flex; gap: 10px; justify-content: flex-end; }
+
+  /* Print stijl */
+  @media print {
+    body { background: white; padding: 0; }
+    .toolbar, .footer, .add-area, .task-footer, .modal-overlay { display: none !important; }
+    .page { max-width: 100%; }
+    .header { border-radius: 0; }
+    .columns { border: 1px solid #ccc; }
+    .task-card { border: 1px solid #ddd; break-inside: avoid; }
+  }
+
+  @media (max-width: 640px) {
+    .columns { grid-template-columns: 1fr; }
+    .col { border-right: none; border-bottom: 1px solid #e5e5e5; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <div class="header">
+    <div>
+      <div class="logo-mark">LABO SCIENTIFIC B.V.</div>
+      <h1>Weekupdate</h1>
+      <div class="header-sub" id="date-range">—</div>
+    </div>
+    <div style="text-align:right">
+      <div class="week-badge" id="week-label">Week —</div>
+      <div style="font-size:11px;opacity:0.7;margin-top:4px" id="name-display"></div>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <div>
+      <label>Naam:</label><br>
+      <input type="text" id="naam-input" placeholder="Jouw naam" oninput="updateName()" style="width:160px">
+    </div>
+    <div>
+      <label>Week van:</label><br>
+      <input type="date" id="week-date" onchange="updateWeek()">
+    </div>
+    <div style="margin-left:auto;display:flex;gap:8px;align-items:flex-end">
+      <button class="btn btn-secondary" onclick="clearAll()">🗑 Leegmaken</button>
+      <button class="btn btn-print" onclick="window.print()">🖨 Printen</button>
+      <button class="btn btn-export" onclick="openExport()">📋 Tekst kopiëren</button>
+    </div>
+  </div>
+
+  <div class="columns">
+
+    <!-- Gepland -->
+    <div class="col col-todo">
+      <div class="col-header">
+        <span class="dot"></span>
+        Gepland deze week
+        <span class="col-count" id="count-todo">0</span>
+      </div>
+      <div class="task-list" id="list-todo"></div>
+      <div class="add-area">
+        <div class="add-row">
+          <input type="text" id="input-todo" placeholder="Nieuwe taak…">
+          <button onclick="addTask('todo')">+</button>
+        </div>
+        <div class="add-note-row">
+          <input type="text" id="note-todo" placeholder="Toelichting (optioneel)">
+        </div>
+      </div>
+    </div>
+
+    <!-- Bezig -->
+    <div class="col col-doing">
+      <div class="col-header">
+        <span class="dot"></span>
+        Mee bezig
+        <span class="col-count" id="count-doing">0</span>
+      </div>
+      <div class="task-list" id="list-doing"></div>
+      <div class="add-area">
+        <div class="add-row">
+          <input type="text" id="input-doing" placeholder="Nieuwe taak…">
+          <button onclick="addTask('doing')">+</button>
+        </div>
+        <div class="add-note-row">
+          <input type="text" id="note-doing" placeholder="Toelichting (optioneel)">
+        </div>
+      </div>
+    </div>
+
+    <!-- Afgerond -->
+    <div class="col col-done">
+      <div class="col-header">
+        <span class="dot"></span>
+        Afgerond
+        <span class="col-count" id="count-done">0</span>
+      </div>
+      <div class="task-list" id="list-done"></div>
+      <div class="add-area">
+        <div class="add-row">
+          <input type="text" id="input-done" placeholder="Nieuwe taak…">
+          <button onclick="addTask('done')">+</button>
+        </div>
+        <div class="add-note-row">
+          <input type="text" id="note-done" placeholder="Toelichting (optioneel)">
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <div class="footer-left">Wijzigingen worden automatisch opgeslagen in deze browser.</div>
+    <div class="footer-btns">
+      <span style="font-size:11px;color:#aaa;align-self:center">Labo Scientific B.V. &mdash; Jennerstraat, Ede</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- Export modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h2>Weekupdate — kopieer en plak in Teams of e-mail</h2>
+    <textarea id="export-text" readonly></textarea>
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="copyText()">📋 Kopieer tekst</button>
+      <button class="btn btn-secondary" onclick="closeModal()">Sluiten</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  var tasks = { todo: [], doing: [], done: [] };
+  var naam = '';
+  var weekDate = '';
+  var idCounter = 1;
+
+  function save() {
+    localStorage.setItem('labo_weekupdate', JSON.stringify({ tasks: tasks, naam: naam, weekDate: weekDate, idCounter: idCounter }));
+  }
+
+  function load() {
+    var raw = localStorage.getItem('labo_weekupdate');
+    if (raw) {
+      try {
+        var d = JSON.parse(raw);
+        tasks = d.tasks || { todo: [], doing: [], done: [] };
+        naam = d.naam || '';
+        weekDate = d.weekDate || '';
+        idCounter = d.idCounter || 1;
+      } catch(e) {}
+    }
+  }
+
+  function getWeekNumber(d) {
+    var date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
+    var yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+    return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+  }
+
+  function initDate() {
+    if (!weekDate) {
+      var today = new Date();
+      var monday = new Date(today);
+      monday.setDate(today.getDate() - ((today.getDay() + 6) % 7));
+      weekDate = monday.toISOString().slice(0, 10);
+    }
+    document.getElementById('week-date').value = weekDate;
+    if (naam) document.getElementById('naam-input').value = naam;
+    updateWeek();
+    updateName();
+  }
+
+  function updateWeek() {
+    weekDate = document.getElementById('week-date').value;
+    if (!weekDate) return;
+    var d = new Date(weekDate);
+    var end = new Date(d);
+    end.setDate(d.getDate() + 4);
+    var wn = getWeekNumber(d);
+    document.getElementById('week-label').textContent = 'Week ' + wn;
+    var opts = { day: 'numeric', month: 'long' };
+    var optsY = { day: 'numeric', month: 'long', year: 'numeric' };
+    document.getElementById('date-range').textContent =
+      d.toLocaleDateString('nl-NL', opts) + ' – ' + end.toLocaleDateString('nl-NL', optsY);
+    save();
+  }
+
+  function updateName() {
+    naam = document.getElementById('naam-input').value.trim();
+    document.getElementById('name-display').textContent = naam || '';
+    save();
+  }
+
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function addTask(col) {
+    var inp = document.getElementById('input-' + col);
+    var noteInp = document.getElementById('note-' + col);
+    var title = inp.value.trim();
+    if (!title) { inp.focus(); return; }
+    var note = noteInp ? noteInp.value.trim() : '';
+    tasks[col].push({ id: idCounter++, title: title, note: note });
+    inp.value = '';
+    if (noteInp) noteInp.value = '';
+    save();
+    render();
+    inp.focus();
+  }
+
+  function moveTask(id, from, to) {
+    var idx = tasks[from].findIndex(function(t) { return t.id === id; });
+    if (idx === -1) return;
+    var task = tasks[from].splice(idx, 1)[0];
+    tasks[to].push(task);
+    save();
+    render();
+  }
+
+  function deleteTask(id, col) {
+    if (!confirm('Taak verwijderen?')) return;
+    tasks[col] = tasks[col].filter(function(t) { return t.id !== id; });
+    save();
+    render();
+  }
+
+  var moveLabels = {
+    todo:  [{ to: 'doing', label: '→ Bezig' }, { to: 'done', label: '→ Afgerond' }],
+    doing: [{ to: 'todo',  label: '← Gepland' }, { to: 'done', label: '→ Afgerond' }],
+    done:  [{ to: 'todo',  label: '← Gepland' }, { to: 'doing', label: '← Bezig' }]
+  };
+
+  function render() {
+    var cols = ['todo', 'doing', 'done'];
+    cols.forEach(function(col) {
+      var list = document.getElementById('list-' + col);
+      list.innerHTML = '';
+      tasks[col].forEach(function(task) {
+        var card = document.createElement('div');
+        card.className = 'task-card';
+
+        var html = '<div class="task-title">' + escHtml(task.title) + '</div>';
+        if (task.note) {
+          html += '<div class="task-note">' + escHtml(task.note) + '</div>';
+        }
+        html += '<div class="task-footer">';
+        moveLabels[col].forEach(function(m) {
+          html += '<button class="btn-sm" onclick="moveTask(' + task.id + ',\'' + col + '\',\'' + m.to + '\')">' + m.label + '</button>';
+        });
+        html += '<button class="btn-del-sm" onclick="deleteTask(' + task.id + ',\'' + col + '\')">✕</button>';
+        html += '</div>';
+
+        card.innerHTML = html;
+        list.appendChild(card);
+      });
+      document.getElementById('count-' + col).textContent = tasks[col].length;
+    });
+  }
+
+  function openExport() {
+    var d = weekDate ? new Date(weekDate) : new Date();
+    var end = new Date(d); end.setDate(d.getDate() + 4);
+    var wn = getWeekNumber(d);
+    var opts = { day: 'numeric', month: 'long', year: 'numeric' };
+
+    var lines = [];
+    lines.push('WEEKUPDATE — WEEK ' + wn);
+    if (naam) lines.push('Van: ' + naam);
+    lines.push(d.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long' }) + ' t/m ' + end.toLocaleDateString('nl-NL', opts));
+    lines.push('');
+    lines.push('─────────────────────────────');
+    lines.push('📋  GEPLAND DEZE WEEK');
+    lines.push('─────────────────────────────');
+    if (tasks.todo.length) {
+      tasks.todo.forEach(function(t) {
+        lines.push('• ' + t.title);
+        if (t.note) lines.push('  ' + t.note);
+      });
+    } else lines.push('(geen)');
+
+    lines.push('');
+    lines.push('─────────────────────────────');
+    lines.push('⏳  MEE BEZIG');
+    lines.push('─────────────────────────────');
+    if (tasks.doing.length) {
+      tasks.doing.forEach(function(t) {
+        lines.push('• ' + t.title);
+        if (t.note) lines.push('  ' + t.note);
+      });
+    } else lines.push('(geen)');
+
+    lines.push('');
+    lines.push('─────────────────────────────');
+    lines.push('✅  AFGEROND');
+    lines.push('─────────────────────────────');
+    if (tasks.done.length) {
+      tasks.done.forEach(function(t) {
+        lines.push('• ' + t.title);
+        if (t.note) lines.push('  ' + t.note);
+      });
+    } else lines.push('(geen)');
+
+    lines.push('');
+    lines.push('Labo Scientific B.V.');
+
+    document.getElementById('export-text').value = lines.join('\n');
+    document.getElementById('modal').classList.add('open');
+  }
+
+  function closeModal() {
+    document.getElementById('modal').classList.remove('open');
+  }
+
+  function copyText() {
+    var ta = document.getElementById('export-text');
+    ta.select();
+    document.execCommand('copy');
+    var btn = document.querySelector('.modal .btn-primary');
+    btn.textContent = '✓ Gekopieerd!';
+    setTimeout(function() { btn.textContent = '📋 Kopieer tekst'; }, 2000);
+  }
+
+  function clearAll() {
+    if (!confirm('Weet je zeker dat je alle taken wilt verwijderen? Dit kan niet ongedaan worden.')) return;
+    tasks = { todo: [], doing: [], done: [] };
+    save();
+    render();
+  }
+
+  // Enter toets in invoervelden
+  ['todo','doing','done'].forEach(function(col) {
+    document.getElementById('input-' + col).addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') addTask(col);
+    });
+    document.getElementById('note-' + col).addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') addTask(col);
+    });
+  });
+
+  // Klik buiten modal sluit hem
+  document.getElementById('modal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+
+  // Start
+  load();
+  initDate();
+  render();
+</script>
+</body>
+</html>
